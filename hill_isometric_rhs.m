@@ -1,19 +1,14 @@
-%hill_rhs.m
-% right-hand side for isotonic Hill model
-% input x = current length, in cm (scalar)
-% output = dx/dt
-function dFdt = hill_isometric_rhs(t,F)
-global kpe kse b xstar x delay A tv
+function dFdt = hill_isometric_rhs(t, F, x, x_star, kse, kpe, b)
+    % Activation function A(t) — simple pulse at 100 ms
+    if t >= 0.1 && t <= 0.11
+        A = 1;
+    else
+        A = 0;
+    end
 
-% scaling function for A(t) as a function of length
-s = (x>0.5*xstar)*(x<1.5*xstar)*(cos(pi*(x-xstar)));
+    % Force-length scaling factor: 1 when x = x_star
+    s = exp(-40 * (x - x_star)^2);
 
-% instead of calculating A(t), use precalculated version
-%Aloc = 1*(t>delay)*(48144*exp(-(t-delay)/0.0326) - 45845*exp(-(t-delay)/0.034));
-% imin = index of nearest match to current value of t
-% using a fine grid, no need to interpolate
-[tmin,imin]=min(abs(tv-t));
-Aloc = A(imin);
-
-dFdt = kse/b*(kpe*(x-xstar)*(x>xstar) - (1+kpe/kse)*F + Aloc*s);
-
+    % ODE from the Hill model
+    dFdt = (kse / b) * ( kpe * (x - x_star) - (1 + kpe / kse) * F + A * s );
+end
